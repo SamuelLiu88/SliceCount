@@ -157,6 +157,32 @@ tr.er-row td{background:var(--ear-bg)}
 .empty{text-align:center;padding:3rem;color:var(--text2);font-size:.9rem}
 hr{border:none;border-top:1px solid var(--border);margin:1.25rem 0}
 .help-text{font-size:.78rem;color:var(--text2);margin-top:.35rem}
+
+/* ── Pizza background ────────────────────────────────── */
+.pizza-bg{position:fixed;inset:0;z-index:-1;pointer-events:none;font-size:2rem;line-height:2.8rem;overflow:hidden;opacity:.07;word-break:break-all;user-select:none;padding:.5rem}
+
+/* ── Copyright footer ────────────────────────────────── */
+.copy-footer{position:fixed;bottom:.75rem;right:1rem;font-size:.7rem;color:var(--text2);opacity:.6;z-index:5;pointer-events:none}
+
+/* ── About button ────────────────────────────────────── */
+.about-btn{background:none;border:1px solid var(--border);border-radius:6px;color:var(--text2);font-size:.78rem;font-family:inherit;padding:.3rem .75rem;cursor:pointer;white-space:nowrap}
+.about-btn:hover{border-color:var(--accent);color:var(--accent)}
+
+/* ── About modal ─────────────────────────────────────── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:100;display:flex;align-items:center;justify-content:center;padding:1rem;opacity:0;pointer-events:none;transition:opacity .2s}
+.modal-overlay.open{opacity:1;pointer-events:all}
+.modal-box{background:var(--surf);border-radius:12px;max-width:580px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.25);transform:translateY(16px);transition:transform .2s}
+.modal-overlay.open .modal-box{transform:translateY(0)}
+.modal-header{display:flex;align-items:center;justify-content:space-between;padding:1.25rem 1.5rem;border-bottom:1px solid var(--border)}
+.modal-title{font-size:1.05rem;font-weight:700}
+.modal-close{background:none;border:none;font-size:1.4rem;color:var(--text2);cursor:pointer;line-height:1;padding:0 .25rem}
+.modal-close:hover{color:var(--text)}
+.modal-body{padding:1.5rem}
+.about-section{margin-bottom:1.75rem}
+.about-section:last-child{margin-bottom:0}
+.about-section-title{font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin-bottom:.6rem}
+.about-section p{color:var(--text2);font-size:.9rem;line-height:1.75}
+.about-section p+p{margin-top:.6rem}
 </style>
 </head>
 <body>
@@ -174,6 +200,7 @@ hr{border:none;border-top:1px solid var(--border);margin:1.25rem 0}
     </div>
     <div class="app-subtitle">Upload last year's data · configure calendars · get predictions</div>
   </div>
+  <button class="about-btn" onclick="document.getElementById('aboutModal').classList.add('open')">About</button>
   <nav class="steps" id="stepNav">
     <div class="step-item active" data-step="1">
       <div class="step-num">1</div><span class="step-label">Data</span>
@@ -192,6 +219,48 @@ hr{border:none;border-top:1px solid var(--border);margin:1.25rem 0}
     </div>
   </nav>
 </header>
+
+<!-- Pizza background -->
+<div class="pizza-bg" id="pizzaBg" aria-hidden="true"></div>
+
+<!-- Copyright -->
+<div class="copy-footer">© Samuel Liu 2026</div>
+
+<!-- About modal -->
+<div class="modal-overlay" id="aboutModal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-title">🍕 About This App</div>
+      <button class="modal-close" onclick="document.getElementById('aboutModal').classList.remove('open')" aria-label="Close">×</button>
+    </div>
+    <div class="modal-body">
+
+      <div class="about-section">
+        <div class="about-section-title">Why I Built This</div>
+        <!-- ✏️ Edit this section with your own text -->
+        <p>  </p>
+        <p>When eating lunch at school, I noticed that there was either a lot of leftovers or not enough food to satisfy the students. I realized that having something to help predict the amount of food eaten per lunch would be efficient and environmentally friendly which led to my making of an app that uses an A.I. to predict food consumption. At the high school, the main manager of the Nutrition Service Team was eager to find a solution to further reducing the waste of food. He kept tabs of how many meals were sold at each station and how much money was earned. I approached him with my solution for meal prediction, and he agreed to supply the data for my app.</p>
+      </div>
+
+      <hr style="border:none;border-top:1px solid var(--border);margin:1.25rem 0">
+
+      <div class="about-section">
+        <div class="about-section-title">Acknowledgements</div>
+        <!-- ✏️ Edit this section with your acknowledgements -->
+        <p> I am thankful to Mr. Blakeman at Camas High School for so generously providing me with the data for a year needed to train my A.I. model. Thanks also to Mrs. Meng, one of the Nutrition Service team member at CHS and Emily and Daniel, my siblings for the endless support they show me.</p>
+      </div>
+
+      <hr style="border:none;border-top:1px solid var(--border);margin:1.25rem 0">
+
+      <div class="about-section">
+        <div class="about-section-title">Built With</div>
+        <p style="color:var(--text2);font-size:.85rem">Python · scikit-learn · Gradient Boosting · Vanilla JavaScript · GitHub Pages</p>
+        <p style="color:var(--text2);font-size:.85rem;margin-top:.4rem">Data: Camas School District 2025–2026 · Calendars: 2025/2026 and 2026/2027 District Calendars</p>
+      </div>
+
+    </div>
+  </div>
+</div>
 
 <main class="app-main">
 
@@ -1049,6 +1118,23 @@ document.getElementById('downloadBtn').addEventListener('click', () => {
 window.addEventListener('resize', () => {
   if (state.step === 4 && state.results.length) drawMonthChart(state.results[state.activeTab].predictions);
 });
+
+// Close about modal on Escape
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') document.getElementById('aboutModal').classList.remove('open');
+});
+
+// Pizza background
+(function() {
+  const bg = document.getElementById('pizzaBg');
+  function fill() {
+    const cols = Math.ceil(window.innerWidth  / 38) + 2;
+    const rows = Math.ceil(window.innerHeight / 46) + 2;
+    bg.textContent = ('🍕 '.repeat(cols) + '\n').repeat(rows);
+  }
+  fill();
+  window.addEventListener('resize', fill);
+})();
 </script>
 </body>
 </html>
