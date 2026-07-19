@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>School Food Consumption Predictor</title>
+<style>
+/* ── Tokens ──────────────────────────────────────────── */
+:root {
+  --bg:       #F1F5FB;
+  --surf:     #FFFFFF;
+  --surf2:    #F7F9FD;
+  --text:     #0F1E36;
+  --text2:    #526180;
+  --accent:   #1D52CC;
+  --acc-bg:   #DDE8FF;
+  --border:   #CFDAEE;
+  --danger:   #C0392B;
+  --dan-bg:   #FEE8E6;
+  --early:    #B45309;
+  --ear-bg:   #FEF3C7;
+  --green:    #15803D;
+  --grn-bg:   #DCFCE7;
+  --bar-reg:  #3D70F0;
+  --bar-er:   #F59E0B;
+  --radius:   8px;
+  --shadow:   0 1px 4px rgba(0,0,0,.06);
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#09101E;--surf:#111C30;--surf2:#0D1626;--text:#C8D8F2;--text2:#5C7299;
+  --accent:#4D7BFF;--acc-bg:#132045;--border:#1A2C48;
+  --danger:#E55;--dan-bg:#2A0808;--early:#F0A020;--ear-bg:#251500;
+  --green:#22C55E;--grn-bg:#052010;--bar-reg:#4D7BFF;--bar-er:#F0A020;
+}}
+:root[data-theme=dark]{
+  --bg:#09101E;--surf:#111C30;--surf2:#0D1626;--text:#C8D8F2;--text2:#5C7299;
+  --accent:#4D7BFF;--acc-bg:#132045;--border:#1A2C48;
+  --danger:#E55;--dan-bg:#2A0808;--early:#F0A020;--ear-bg:#251500;
+  --green:#22C55E;--grn-bg:#052010;--bar-reg:#4D7BFF;--bar-er:#F0A020;
+}
+:root[data-theme=light]{
+  --bg:#F1F5FB;--surf:#FFFFFF;--surf2:#F7F9FD;--text:#0F1E36;--text2:#526180;
+  --accent:#1D52CC;--acc-bg:#DDE8FF;--border:#CFDAEE;
+  --danger:#C0392B;--dan-bg:#FEE8E6;--early:#B45309;--ear-bg:#FEF3C7;
+  --green:#15803D;--grn-bg:#DCFCE7;--bar-reg:#3D70F0;--bar-er:#F59E0B;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,'Segoe UI',sans-serif;font-size:15px;line-height:1.6;min-height:100vh}
+
+/* ── Header ─────────────────────────────────────────── */
+.app-header{background:var(--surf);border-bottom:1px solid var(--border);padding:.8rem 1.5rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;position:sticky;top:0;z-index:20}
+.app-title{font-size:.95rem;font-weight:700;display:flex;align-items:center;gap:.5rem}
+.app-title svg{flex-shrink:0}
+.app-subtitle{font-size:.73rem;color:var(--text2);margin-top:.05rem}
+
+/* ── Step indicator ──────────────────────────────────── */
+.steps{display:flex;align-items:center;gap:0}
+.step-item{display:flex;align-items:center;gap:.35rem;font-size:.75rem;color:var(--text2);cursor:pointer}
+.step-item.done{color:var(--green)}
+.step-item.active{color:var(--accent);font-weight:600}
+.step-num{width:22px;height:22px;border-radius:50%;border:1.5px solid currentColor;display:flex;align-items:center;justify-content:center;font-size:.68rem;font-weight:700;flex-shrink:0}
+.step-item.done .step-num{background:var(--green);border-color:var(--green);color:#fff}
+.step-item.active .step-num{background:var(--accent);border-color:var(--accent);color:#fff}
+.step-connector{width:28px;height:1px;background:var(--border);margin:0 .3rem}
+@media(max-width:540px){.step-label{display:none}.step-connector{width:14px}}
+
+/* ── Main ────────────────────────────────────────────── */
+.app-main{max-width:860px;margin:0 auto;padding:1.75rem 1.25rem 4rem}
+.panel{display:none}
+.panel.active{display:block}
+
+/* ── Cards ───────────────────────────────────────────── */
+.card{background:var(--surf);border:1px solid var(--border);border-radius:var(--radius);padding:1.5rem;box-shadow:var(--shadow);margin-bottom:1.25rem}
+.card-title{font-size:.68rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text2);margin-bottom:1rem}
+.section-title{font-size:1.15rem;font-weight:700;margin-bottom:.25rem}
+.section-sub{color:var(--text2);font-size:.88rem;margin-bottom:1.5rem}
+
+/* ── Upload ──────────────────────────────────────────── */
+.upload-zone{border:2px dashed var(--border);border-radius:var(--radius);padding:2.5rem 1.5rem;text-align:center;cursor:pointer;transition:border-color .15s,background .15s;margin-bottom:1rem}
+.upload-zone:hover,.upload-zone.drag{border-color:var(--accent);background:var(--acc-bg)}
+.upload-icon{font-size:2rem;margin-bottom:.5rem}
+.upload-hint{color:var(--text2);font-size:.85rem;margin-top:.35rem}
+.upload-link{color:var(--accent);text-decoration:underline;cursor:pointer}
+.file-list{display:flex;flex-direction:column;gap:.5rem}
+.file-chip{background:var(--surf2);border:1px solid var(--border);border-radius:6px;padding:.55rem .9rem;display:flex;align-items:center;justify-content:space-between;gap:.75rem;font-size:.85rem}
+.file-chip-name{font-weight:600;color:var(--text);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.file-chip-meta{font-size:.75rem;color:var(--text2);white-space:nowrap}
+.file-chip-remove{background:none;border:none;color:var(--text2);cursor:pointer;font-size:1rem;padding:0 .25rem;line-height:1;flex-shrink:0}
+.file-chip-remove:hover{color:var(--danger)}
+
+/* ── Form elements ───────────────────────────────────── */
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem}
+.form-row.wide{grid-template-columns:1fr}
+@media(max-width:500px){.form-row{grid-template-columns:1fr}}
+.form-group{display:flex;flex-direction:column;gap:.3rem}
+.form-label{font-size:.72rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--text2)}
+input[type=date],input[type=text],select{background:var(--surf2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:.88rem;padding:.45rem .7rem;font-family:inherit;width:100%;outline:none;appearance:none;-webkit-appearance:none}
+input[type=date]:focus,input[type=text]:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--acc-bg)}
+
+/* ── Calendar builder ────────────────────────────────── */
+.cal-section{margin-bottom:1.5rem}
+.cal-section-title{font-size:.78rem;font-weight:700;color:var(--text);margin-bottom:.6rem;display:flex;align-items:center;gap:.5rem}
+.cal-list{display:flex;flex-direction:column;gap:.45rem;margin-bottom:.6rem}
+.cal-row{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap}
+.cal-row input[type=date]{max-width:155px;flex:1}
+.cal-row input[type=text]{max-width:170px;flex:1}
+.cal-row .remove-btn{background:none;border:none;color:var(--text2);cursor:pointer;font-size:1.1rem;padding:0 .2rem;flex-shrink:0;line-height:1}
+.cal-row .remove-btn:hover{color:var(--danger)}
+.add-btn{background:none;border:1px dashed var(--border);border-radius:6px;color:var(--accent);font-size:.8rem;font-weight:600;padding:.35rem .8rem;cursor:pointer;font-family:inherit;transition:background .12s}
+.add-btn:hover{background:var(--acc-bg)}
+
+/* ── Buttons ─────────────────────────────────────────── */
+.btn-row{display:flex;gap:.75rem;justify-content:flex-end;margin-top:1.5rem;flex-wrap:wrap}
+.btn{padding:.55rem 1.4rem;border-radius:7px;font-size:.88rem;font-family:inherit;font-weight:600;cursor:pointer;border:none;transition:opacity .12s}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:not(:disabled):hover{opacity:.88}
+.btn-secondary{background:var(--surf2);color:var(--text);border:1px solid var(--border)}
+.btn-secondary:not(:disabled):hover{border-color:var(--accent);color:var(--accent)}
+.btn-sm{padding:.35rem .9rem;font-size:.8rem}
+
+/* ── Results ─────────────────────────────────────────── */
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:1rem;margin-bottom:1.25rem}
+.stat-box{background:var(--surf);border:1px solid var(--border);border-radius:var(--radius);padding:1rem 1.1rem}
+.stat-lbl{font-size:.65rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--text2);margin-bottom:.25rem}
+.stat-val{font-size:1.7rem;font-weight:800;color:var(--text);letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.stat-sub{font-size:.7rem;color:var(--text2);margin-top:.1rem}
+
+.station-tabs{display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:1rem}
+.tab-btn{background:var(--surf2);border:1px solid var(--border);border-radius:6px;padding:.35rem .85rem;font-size:.8rem;font-family:inherit;cursor:pointer;color:var(--text2);font-weight:500}
+.tab-btn.active{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+
+canvas{display:block;width:100%;cursor:crosshair}
+.chart-meta{display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem;flex-wrap:wrap;gap:.5rem}
+.legend{display:flex;gap:1rem;font-size:.73rem;color:var(--text2);align-items:center}
+.leg-swatch{width:10px;height:10px;border-radius:2px;flex-shrink:0}
+
+.table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{width:100%;border-collapse:collapse;font-size:.83rem}
+th{text-align:left;font-size:.65rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text2);padding:.45rem .6rem .45rem 0;border-bottom:1px solid var(--border);white-space:nowrap}
+td{padding:.48rem .6rem .48rem 0;border-bottom:1px solid var(--border);font-variant-numeric:tabular-nums}
+tr:last-child td{border-bottom:none}
+tr.er-row td{background:var(--ear-bg)}
+.pill{display:inline-flex;align-items:center;gap:.3rem;font-size:.7rem;font-weight:600;padding:.15rem .5rem;border-radius:99px}
+.pill-er{background:var(--ear-bg);color:var(--early)}
+.pill-ok{background:var(--acc-bg);color:var(--accent)}
+
+/* ── Misc ────────────────────────────────────────────── */
+.alert{border-radius:var(--radius);padding:.75rem 1rem;font-size:.85rem;margin-bottom:1rem;display:flex;align-items:flex-start;gap:.6rem}
+.alert-warn{background:var(--ear-bg);color:var(--early)}
+.alert-err {background:var(--dan-bg);color:var(--danger)}
+.alert-ok  {background:var(--grn-bg);color:var(--green)}
+.spinner{display:inline-block;width:28px;height:28px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading{text-align:center;padding:3rem;color:var(--text2)}
+.loading p{margin-top:.75rem;font-size:.88rem}
+.empty{text-align:center;padding:3rem;color:var(--text2);font-size:.9rem}
+hr{border:none;border-top:1px solid var(--border);margin:1.25rem 0}
+.help-text{font-size:.78rem;color:var(--text2);margin-top:.35rem}
+</style>
+</head>
+<body>
+
+<!-- ── Header ─────────────────────────────────────────── -->
+<header class="app-header">
+  <div>
+    <div class="app-title">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+        <rect x="3" y="12" width="14" height="2.5" rx="1.25" fill="var(--accent)"/>
+        <rect x="3" y="8"  width="10" height="2.5" rx="1.25" fill="var(--accent)" opacity=".7"/>
+        <rect x="3" y="4"  width="6"  height="2.5" rx="1.25" fill="var(--accent)" opacity=".4"/>
+      </svg>
+      School Food Consumption Predictor
+    </div>
+    <div class="app-subtitle">Upload last year's data · configure calendars · get predictions</div>
+  </div>
+  <nav class="steps" id="stepNav">
+    <div class="step-item active" data-step="1">
+      <div class="step-num">1</div><span class="step-label">Data</span>
+    </div>
+    <div class="step-connector"></div>
+    <div class="step-item" data-step="2">
+      <div class="step-num">2</div><span class="step-label">Last Year</span>
+    </div>
+    <div class="step-connector"></div>
+    <div class="step-item" data-step="3">
+      <div class="step-num">3</div><span class="step-label">This Year</span>
+    </div>
+    <div class="step-connector"></div>
+    <div class="step-item" data-step="4">
+      <div class="step-num">4</div><span class="step-label">Predictions</span>
+    </div>
+  </nav>
+</header>
+
+<main class="app-main">
+
+<!-- ══ STEP 1: Upload ════════════════════════════════════ -->
+<div class="panel active" id="panel1">
+  <div class="section-title">Upload Food Consumption Data</div>
+  <div class="section-sub">Upload one or more CSV files from last school year. Each file should have a <strong>Date</strong> column and a meals count column.</div>
+
+  <div class="card">
+    <div class="upload-zone" id="uploadZone">
+      <div class="upload-icon">📂</div>
+      <div><strong>Drop CSV files here</strong> or <span class="upload-link" id="browseLink">click to browse</span></div>
+      <div class="upload-hint">Supports: Grill Breakfast.csv, NC Lunch.csv, Totals Breakfast.csv … any station file</div>
+      <input type="file" accept=".csv" multiple id="fileInput" style="display:none">
+    </div>
+    <div class="file-list" id="fileList"></div>
+    <div id="uploadAlert"></div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn btn-primary" id="step1Next" disabled>Next: Configure Last Year →</button>
+  </div>
+</div>
+
+<!-- ══ STEP 2: Training Calendar ═════════════════════════ -->
+<div class="panel" id="panel2">
+  <div class="section-title">Last Year's School Calendar</div>
+  <div class="section-sub">Configure the school year your data covers. The model uses this to understand which days were school days and what kind of day each was.</div>
+
+  <div class="card" id="trainCalCard">
+    <!-- injected by JS -->
+  </div>
+
+  <div class="btn-row">
+    <button class="btn btn-secondary" onclick="goStep(1)">← Back</button>
+    <button class="btn btn-primary" id="step2Next">Next: Configure This Year →</button>
+  </div>
+</div>
+
+<!-- ══ STEP 3: Prediction Calendar ═══════════════════════ -->
+<div class="panel" id="panel3">
+  <div class="section-title">This Year's School Calendar</div>
+  <div class="section-sub">Configure the school year you want predictions for. The model will predict meals for every school day in this calendar.</div>
+
+  <div class="card" id="predictCalCard">
+    <!-- injected by JS -->
+  </div>
+
+  <div class="btn-row">
+    <button class="btn btn-secondary" onclick="goStep(2)">← Back</button>
+    <button class="btn btn-primary" id="step3Next">Run Predictions →</button>
+  </div>
+</div>
+
+<!-- ══ STEP 4: Results ════════════════════════════════════ -->
+<div class="panel" id="panel4">
+  <div id="loadingState" class="loading" style="display:none">
+    <div class="spinner"></div>
+    <p>Training models and generating predictions…</p>
+  </div>
+
+  <div id="resultsState" style="display:none">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.75rem;margin-bottom:1.25rem">
+      <div>
+        <div class="section-title" style="margin-bottom:0">Predictions</div>
+        <div style="font-size:.8rem;color:var(--text2)" id="resultsMeta">—</div>
+      </div>
+      <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+        <button class="btn btn-secondary btn-sm" onclick="goStep(1)">← Start Over</button>
+        <button class="btn btn-primary btn-sm" id="downloadBtn">⬇ Download CSV</button>
+      </div>
+    </div>
+
+    <!-- Station tabs -->
+    <div class="station-tabs" id="stationTabs"></div>
+
+    <!-- Stats -->
+    <div class="stat-grid" id="statGrid"></div>
+
+    <!-- Chart -->
+    <div class="card" style="margin-bottom:1.25rem">
+      <div class="chart-meta">
+        <div class="card-title" style="margin-bottom:0" id="chartTitle">Monthly Trend</div>
+        <div class="legend">
+          <span style="display:flex;align-items:center;gap:4px"><span class="leg-swatch" style="background:var(--bar-reg)"></span>Regular</span>
+          <span style="display:flex;align-items:center;gap:4px"><span class="leg-swatch" style="background:var(--bar-er)"></span>Early release</span>
+        </div>
+      </div>
+      <canvas id="monthChart" height="160"></canvas>
+    </div>
+
+    <!-- Table -->
+    <div class="card">
+      <div class="card-title">All School Days</div>
+      <div class="table-wrap">
+        <table id="predTable">
+          <thead><tr>
+            <th>#</th><th>Date</th><th>Day</th>
+            <th>Predicted Meals</th><th>Note</th>
+          </tr></thead>
+          <tbody id="predTbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+</main>
+
+<script>
+'use strict';
+
+/* ═══════════════════════════════════════════════════════
+   UTILITIES
+═══════════════════════════════════════════════════════ */
+function isoDate(d) {
+  return d.getFullYear() + '-' +
+    String(d.getMonth() + 1).padStart(2, '0') + '-' +
+    String(d.getDate()).padStart(2, '0');
+}
+
+function parseAnyDate(s) {
+  if (!s) return null;
+  s = s.trim();
+  if (s.includes('/')) {
+    const p = s.split('/');
+    // M/D/YYYY or M/D/YY
+    let y = parseInt(p[2]);
+    if (y < 100) y += 2000;
+    return `${y}-${String(parseInt(p[0])).padStart(2,'0')}-${String(parseInt(p[1])).padStart(2,'0')}`;
+  }
+  return s; // assume YYYY-MM-DD
+}
+
+function dateAdd(ds, days) {
+  const d = new Date(ds + 'T12:00:00');
+  d.setDate(d.getDate() + days);
+  return isoDate(d);
+}
+
+function meanArr(arr) { return arr.length ? arr.reduce((s, v) => s + v, 0) / arr.length : 0; }
+
+const DAYS  = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const DAYS3 = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const MONTHS = ['January','February','March','April','May','June',
+                'July','August','September','October','November','December'];
+
+/* ═══════════════════════════════════════════════════════
+   CSV PARSER
+═══════════════════════════════════════════════════════ */
+function parseCSV(text) {
+  const lines = text.replace(/\r/g, '').split('\n').map(l => l.trim()).filter(Boolean);
+  if (lines.length < 2) return null;
+  const header = splitCSVLine(lines[0]);
+  const rows = lines.slice(1).map(l => {
+    const vals = splitCSVLine(l);
+    const obj = {};
+    header.forEach((h, i) => obj[h] = (vals[i] || '').trim());
+    return obj;
+  });
+  return { header, rows };
+}
+
+function splitCSVLine(line) {
+  const result = [], re = /("(?:[^"]|"")*"|[^,]*)/g;
+  let m;
+  while ((m = re.exec(line)) !== null) {
+    if (m.index === re.lastIndex) re.lastIndex++;
+    let v = m[1];
+    if (v.startsWith('"')) v = v.slice(1, -1).replace(/""/g, '"');
+    result.push(v);
+  }
+  return result;
+}
+
+function detectMealCol(header) {
+  return header.find(h => /meal|total/i.test(h) && !/date/i.test(h)) || header[1];
+}
+
+function detectDateCol(header) {
+  return header.find(h => /date/i.test(h)) || header[0];
+}
+
+function guessStation(filename) {
+  const name = filename.replace(/\.csv$/i, '');
+  const meal = /breakfast/i.test(name) ? 'Breakfast' : /lunch/i.test(name) ? 'Lunch' : 'Meals';
+  const station = name.replace(/\s*(breakfast|lunch)\s*/i, '').trim() || 'Station';
+  return { station, meal, label: `${station} ${meal}` };
+}
+
+/* ═══════════════════════════════════════════════════════
+   CALENDAR BUILDER
+═══════════════════════════════════════════════════════ */
+function buildCalendar(cfg) {
+  const noSchool = new Set();
+
+  for (const p of (cfg.periods || [])) {
+    if (!p.start || !p.end) continue;
+    let d = new Date(p.start + 'T12:00:00');
+    const end = new Date(p.end + 'T12:00:00');
+    while (d <= end) { noSchool.add(isoDate(d)); d.setDate(d.getDate() + 1); }
+  }
+  for (const s of (cfg.singles || [])) {
+    if (s.date) noSchool.add(s.date);
+  }
+
+  const earlyRelease = new Set((cfg.earlyDays || []).filter(Boolean));
+
+  const sorted = [];
+  let d = new Date(cfg.start + 'T12:00:00');
+  const end = new Date(cfg.end + 'T12:00:00');
+  while (d <= end) {
+    const ds = isoDate(d);
+    const dow = d.getDay();
+    if (dow > 0 && dow < 6 && !noSchool.has(ds)) sorted.push(ds);
+    d.setDate(d.getDate() + 1);
+  }
+
+  const schoolSet = new Set(sorted);
+  const dayIndex  = {};
+  sorted.forEach((ds, i) => dayIndex[ds] = i + 1);
+
+  return { schoolSet, earlyRelease, sorted, dayIndex, start: cfg.start, end: cfg.end };
+}
+
+/* ═══════════════════════════════════════════════════════
+   FEATURE EXTRACTION
+═══════════════════════════════════════════════════════ */
+function extractFeatures(ds, cal) {
+  const d   = new Date(ds + 'T12:00:00');
+  const idx = cal.dayIndex[ds] || 0;
+  const n   = cal.sorted.length;
+  const dom = d.getDay(); // 0=Sun
+
+  const tom = dateAdd(ds, 1);
+  const yes = dateAdd(ds, -1);
+
+  function nonSchoolWeekday(s) {
+    const w = new Date(s + 'T12:00:00').getDay();
+    return w > 0 && w < 6 && s >= cal.start && s <= cal.end && !cal.schoolSet.has(s);
+  }
+
+  const dow = dom === 0 ? 6 : dom - 1; // 0=Mon…4=Fri
+
+  return [
+    dow,                               // 0 day_of_week
+    d.getMonth() + 1,                  // 1 month
+    idx,                               // 2 school_day_idx
+    n > 0 ? idx / n : 0,             // 3 year_progress
+    cal.earlyRelease.has(ds) ? 1 : 0, // 4 is_early_release
+    dom === 3 ? 1 : 0,                // 5 is_wednesday
+    dom === 1 ? 1 : 0,                // 6 is_monday
+    dom === 5 ? 1 : 0,                // 7 is_friday
+    nonSchoolWeekday(tom) ? 1 : 0,   // 8 day_before_break
+    nonSchoolWeekday(yes) ? 1 : 0,   // 9 day_after_break
+    idx > 0 && idx <= 5 ? 1 : 0,    // 10 is_first_week
+    idx > 0 && idx > n - 5 ? 1 : 0, // 11 is_last_week
+    d.getMonth() >= 7 ? 1 : 2,       // 12 semester
+  ];
+}
+
+/* ═══════════════════════════════════════════════════════
+   DECISION TREE + GRADIENT BOOSTING
+═══════════════════════════════════════════════════════ */
+function buildTree(X, y, maxDepth, minLeaf, depth) {
+  depth = depth || 0;
+  const n = y.length;
+  const m = meanArr(y);
+  if (n <= minLeaf || depth >= maxDepth) return { leaf: true, val: m };
+
+  const nF = X[0].length;
+  let bestScore = Infinity, bestF = -1, bestT = 0;
+
+  for (let f = 0; f < nF; f++) {
+    const sorted = Array.from({ length: n }, (_, i) => i).sort((a, b) => X[a][f] - X[b][f]);
+    let lS = 0, lQ = 0, lN = 0;
+    let rS = 0, rQ = 0, rN = n;
+    for (let i = 0; i < n; i++) { rS += y[i]; rQ += y[i] * y[i]; }
+
+    for (let i = 0; i < n - 1; i++) {
+      const v = y[sorted[i]];
+      lS += v; lQ += v * v; lN++;
+      rS -= v; rQ -= v * v; rN--;
+      if (X[sorted[i]][f] === X[sorted[i + 1]][f]) continue;
+      if (lN < minLeaf || rN < minLeaf) continue;
+      const score = (lQ - lS * lS / lN) + (rQ - rS * rS / rN);
+      if (score < bestScore) {
+        bestScore = score;
+        bestF = f;
+        bestT = (X[sorted[i]][f] + X[sorted[i + 1]][f]) / 2;
+      }
+    }
+  }
+
+  if (bestF === -1) return { leaf: true, val: m };
+
+  const lX = [], lY = [], rX = [], rY = [];
+  for (let i = 0; i < n; i++) {
+    if (X[i][bestF] <= bestT) { lX.push(X[i]); lY.push(y[i]); }
+    else                      { rX.push(X[i]); rY.push(y[i]); }
+  }
+
+  return {
+    leaf: false, f: bestF, t: bestT,
+    left:  buildTree(lX, lY, maxDepth, minLeaf, depth + 1),
+    right: buildTree(rX, rY, maxDepth, minLeaf, depth + 1),
+  };
+}
+
+function predTree(node, x) {
+  if (node.leaf) return node.val;
+  return x[node.f] <= node.t ? predTree(node.left, x) : predTree(node.right, x);
+}
+
+function fitGBR(X, y) {
+  const nEst = 150, maxDepth = 4, lr = 0.08, minLeaf = 2;
+  const n    = y.length;
+  const base = meanArr(y);
+  const preds = new Float64Array(n).fill(base);
+  const trees = [];
+
+  for (let t = 0; t < nEst; t++) {
+    const resid = Array.from({ length: n }, (_, i) => y[i] - preds[i]);
+    const tree  = buildTree(X, resid, maxDepth, minLeaf, 0);
+    trees.push(tree);
+    for (let i = 0; i < n; i++) preds[i] += lr * predTree(tree, X[i]);
+  }
+  return { base, trees, lr };
+}
+
+function predGBR(model, x) {
+  let v = model.base;
+  for (const t of model.trees) v += model.lr * predTree(t, x);
+  return Math.max(0, Math.round(v));
+}
+
+/* ═══════════════════════════════════════════════════════
+   TRAINING PIPELINE
+═══════════════════════════════════════════════════════ */
+function runPipeline(csvData, trainCal, predictCal) {
+  const { header, rows } = csvData;
+  const dateCol = detectDateCol(header);
+  const mealCol = detectMealCol(header);
+
+  const X = [], y = [];
+  for (const row of rows) {
+    const ds    = parseAnyDate(row[dateCol]);
+    const meals = parseInt(row[mealCol]) || 0;
+    if (!ds || !trainCal.schoolSet.has(ds) || meals === 0) continue;
+    X.push(extractFeatures(ds, trainCal));
+    y.push(meals);
+  }
+
+  if (X.length < 8) return { error: `Too few training days (${X.length}). Check that the dates in your CSV match the Last Year calendar.` };
+
+  const model = fitGBR(X, y);
+
+  const predictions = predictCal.sorted.map(ds => {
+    const d    = new Date(ds + 'T12:00:00');
+    const feat = extractFeatures(ds, predictCal);
+    const pred = predGBR(model, feat);
+    const er   = predictCal.earlyRelease.has(ds);
+    const idx  = predictCal.dayIndex[ds];
+    const n    = predictCal.sorted.length;
+    let note   = er ? 'Early release' : 'Regular';
+    if (idx <= 5)      note = 'First week';
+    if (idx > n - 5)   note = 'Last week';
+    if (feat[8])       note += ' · before break';
+    else if (feat[9])  note += ' · after break';
+    return {
+      date: ds,
+      day:  DAYS3[d.getDay()],
+      meals: pred,
+      er,
+      idx,
+      note,
+      month: d.getMonth(),
+      year:  d.getFullYear(),
+    };
+  });
+
+  return { predictions, trainSize: X.length };
+}
+
+/* ═══════════════════════════════════════════════════════
+   STATE
+═══════════════════════════════════════════════════════ */
+const state = {
+  step: 1,
+  files: [],     // { name, info, csv }
+  results: [],   // { label, predictions, trainSize }
+  activeTab: 0,
+  hoverMonth: null,
+};
+
+/* ═══════════════════════════════════════════════════════
+   CALENDAR FORM BUILDER
+═══════════════════════════════════════════════════════ */
+function buildCalForm(container, idPrefix, defaults) {
+  defaults = defaults || {};
+  container.innerHTML = `
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">School Year Start</label>
+        <input type="date" id="${idPrefix}_start" value="${defaults.start || ''}">
+      </div>
+      <div class="form-group">
+        <label class="form-label">School Year End</label>
+        <input type="date" id="${idPrefix}_end" value="${defaults.end || ''}">
+      </div>
+    </div>
+    <hr>
+    <div class="cal-section">
+      <div class="cal-section-title">
+        🚫 Holidays &amp; Breaks
+        <span style="font-weight:400;color:var(--text2);font-size:.72rem">(date ranges)</span>
+      </div>
+      <div class="cal-list" id="${idPrefix}_periods"></div>
+      <button class="add-btn" onclick="addPeriod('${idPrefix}')">+ Add holiday or break</button>
+    </div>
+    <div class="cal-section" style="margin-top:1rem">
+      <div class="cal-section-title">
+        📅 Single No-School Days
+        <span style="font-weight:400;color:var(--text2);font-size:.72rem">(individual dates)</span>
+      </div>
+      <div class="cal-list" id="${idPrefix}_singles"></div>
+      <button class="add-btn" onclick="addSingle('${idPrefix}')">+ Add single holiday</button>
+    </div>
+    <div class="cal-section" style="margin-top:1rem">
+      <div class="cal-section-title">
+        ⏰ Early Release Days
+        <span style="font-weight:400;color:var(--text2);font-size:.72rem">(reduced meals)</span>
+      </div>
+      <div class="cal-list" id="${idPrefix}_early"></div>
+      <button class="add-btn" onclick="addEarly('${idPrefix}')">+ Add early release day</button>
+      <div class="help-text">These days typically have significantly fewer meals served.</div>
+    </div>`;
+
+  // Populate defaults
+  for (const p of (defaults.periods || [])) addPeriod(idPrefix, p);
+  for (const s of (defaults.singles || [])) addSingle(idPrefix, s);
+  for (const e of (defaults.early   || [])) addEarly(idPrefix, e);
+}
+
+let rowId = 0;
+function addPeriod(prefix, data) {
+  data = data || {};
+  const id = ++rowId;
+  const li = document.createElement('div');
+  li.className = 'cal-row';
+  li.id = `row_${id}`;
+  li.innerHTML = `
+    <input type="text"  placeholder="Name (e.g. Winter Break)" value="${data.name||''}" style="max-width:180px;flex:1">
+    <input type="date"  value="${data.start||''}" title="Start date">
+    <span style="color:var(--text2);font-size:.8rem;flex-shrink:0">to</span>
+    <input type="date"  value="${data.end||''}" title="End date">
+    <button class="remove-btn" onclick="this.closest('.cal-row').remove()">×</button>`;
+  document.getElementById(prefix + '_periods').appendChild(li);
+}
+
+function addSingle(prefix, data) {
+  data = data || {};
+  const li = document.createElement('div');
+  li.className = 'cal-row';
+  li.innerHTML = `
+    <input type="text" placeholder="Name (e.g. Labor Day)" value="${data.name||''}" style="max-width:180px;flex:1">
+    <input type="date" value="${data.date||''}" title="Date">
+    <button class="remove-btn" onclick="this.closest('.cal-row').remove()">×</button>`;
+  document.getElementById(prefix + '_singles').appendChild(li);
+}
+
+function addEarly(prefix, date) {
+  const li = document.createElement('div');
+  li.className = 'cal-row';
+  li.innerHTML = `
+    <input type="date" value="${date||''}" title="Early release date">
+    <button class="remove-btn" onclick="this.closest('.cal-row').remove()">×</button>`;
+  document.getElementById(prefix + '_early').appendChild(li);
+}
+
+function readCalForm(prefix) {
+  const start = document.getElementById(prefix + '_start').value;
+  const end   = document.getElementById(prefix + '_end').value;
+
+  const periods = [];
+  document.getElementById(prefix + '_periods').querySelectorAll('.cal-row').forEach(row => {
+    const inputs = row.querySelectorAll('input');
+    if (inputs[1].value && inputs[2].value)
+      periods.push({ name: inputs[0].value, start: inputs[1].value, end: inputs[2].value });
+  });
+
+  const singles = [];
+  document.getElementById(prefix + '_singles').querySelectorAll('.cal-row').forEach(row => {
+    const inputs = row.querySelectorAll('input');
+    if (inputs[1].value)
+      singles.push({ name: inputs[0].value, date: inputs[1].value });
+  });
+
+  const earlyDays = [];
+  document.getElementById(prefix + '_early').querySelectorAll('.cal-row').forEach(row => {
+    const v = row.querySelector('input').value;
+    if (v) earlyDays.push(v);
+  });
+
+  return { start, end, periods, singles, earlyDays };
+}
+
+/* ═══════════════════════════════════════════════════════
+   DEFAULT CALENDARS (Camas SD — editable)
+═══════════════════════════════════════════════════════ */
+const DEFAULTS_TRAIN = {
+  start: '2025-08-25',
+  end:   '2026-06-18',
+  periods: [
+    { name: 'Thanksgiving',   start: '2025-11-24', end: '2025-11-28' },
+    { name: 'Winter Break',   start: '2025-12-22', end: '2026-01-02' },
+    { name: 'Mid-Winter Break', start: '2026-02-16', end: '2026-02-20' },
+    { name: 'Spring Break',   start: '2026-04-06', end: '2026-04-10' },
+  ],
+  singles: [
+    { name: 'Labor Day',         date: '2025-09-01' },
+    { name: 'State Inservice',   date: '2025-10-10' },
+    { name: 'Veterans Day',      date: '2025-11-11' },
+    { name: 'MLK Day',           date: '2026-01-19' },
+    { name: 'Grading Day',       date: '2026-01-26' },
+    { name: 'Memorial Day',      date: '2026-05-25' },
+  ],
+  early: [
+    '2025-09-10','2025-09-24','2025-10-08','2025-10-22',
+    '2025-11-12','2025-12-10','2026-01-14','2026-01-28',
+    '2026-02-11','2026-02-25','2026-03-11','2026-03-25',
+    '2026-04-15','2026-04-29','2026-05-13','2026-05-27','2026-06-10',
+  ],
+};
+
+const DEFAULTS_PREDICT = {
+  start: '2026-08-24',
+  end:   '2027-06-17',
+  periods: [
+    { name: 'Thanksgiving',   start: '2026-11-23', end: '2026-11-27' },
+    { name: 'Winter Break',   start: '2026-12-21', end: '2027-01-01' },
+    { name: 'Mid-Winter Break', start: '2027-02-15', end: '2027-02-19' },
+    { name: 'Spring Break',   start: '2027-04-05', end: '2027-04-09' },
+  ],
+  singles: [
+    { name: 'Labor Day',       date: '2026-09-07' },
+    { name: 'State Inservice', date: '2026-10-09' },
+    { name: 'Veterans Day',    date: '2026-11-11' },
+    { name: 'MLK Day',         date: '2027-01-18' },
+    { name: 'Grading Day',     date: '2027-01-22' },
+    { name: 'Memorial Day',    date: '2027-05-31' },
+  ],
+  early: [
+    '2026-09-09','2026-09-23','2026-10-14','2026-10-28',
+    '2026-11-18','2026-12-09','2027-01-13','2027-01-27',
+    '2027-02-10','2027-02-24','2027-03-10','2027-03-24',
+    '2027-04-14','2027-04-28','2027-05-12','2027-05-26','2027-06-09',
+  ],
+};
+
+/* ═══════════════════════════════════════════════════════
+   NAVIGATION
+═══════════════════════════════════════════════════════ */
+function goStep(n) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('panel' + n).classList.add('active');
+
+  document.querySelectorAll('.step-item').forEach(el => {
+    const s = parseInt(el.dataset.step);
+    el.classList.remove('active', 'done');
+    if (s === n)    el.classList.add('active');
+    if (s < n)      el.classList.add('done');
+  });
+  state.step = n;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+/* ═══════════════════════════════════════════════════════
+   STEP 1: FILE UPLOAD
+═══════════════════════════════════════════════════════ */
+const uploadZone = document.getElementById('uploadZone');
+const fileInput  = document.getElementById('fileInput');
+
+document.getElementById('browseLink').addEventListener('click', () => fileInput.click());
+uploadZone.addEventListener('click', e => { if (e.target.id !== 'browseLink') fileInput.click(); });
+uploadZone.addEventListener('dragover',  e => { e.preventDefault(); uploadZone.classList.add('drag'); });
+uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('drag'));
+uploadZone.addEventListener('drop', e => {
+  e.preventDefault();
+  uploadZone.classList.remove('drag');
+  handleFiles([...e.dataTransfer.files]);
+});
+fileInput.addEventListener('change', () => handleFiles([...fileInput.files]));
+
+function handleFiles(files) {
+  files.forEach(file => {
+    if (!file.name.endsWith('.csv')) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+      const csv  = parseCSV(e.target.result);
+      if (!csv)  return;
+      const info = guessStation(file.name);
+      state.files.push({ name: file.name, info, csv });
+      renderFileList();
+    };
+    reader.readAsText(file);
+  });
+}
+
+function renderFileList() {
+  const list = document.getElementById('fileList');
+  list.innerHTML = '';
+  state.files.forEach((f, i) => {
+    const chip = document.createElement('div');
+    chip.className = 'file-chip';
+    const rows = f.csv.rows.filter(r => parseInt(r[detectMealCol(f.csv.header)]) > 0).length;
+    chip.innerHTML = `
+      <div class="file-chip-name">${f.name}</div>
+      <div class="file-chip-meta">${f.info.label} · ${rows} data days</div>
+      <button class="file-chip-remove" data-i="${i}" title="Remove">×</button>`;
+    chip.querySelector('.file-chip-remove').addEventListener('click', () => {
+      state.files.splice(i, 1);
+      renderFileList();
+    });
+    list.appendChild(chip);
+  });
+  document.getElementById('step1Next').disabled = state.files.length === 0;
+}
+
+document.getElementById('step1Next').addEventListener('click', () => {
+  buildCalForm(document.getElementById('trainCalCard'), 'train', DEFAULTS_TRAIN);
+  goStep(2);
+});
+
+/* ═══════════════════════════════════════════════════════
+   STEP 2 → 3
+═══════════════════════════════════════════════════════ */
+document.getElementById('step2Next').addEventListener('click', () => {
+  const cfg = readCalForm('train');
+  if (!cfg.start || !cfg.end) {
+    alert('Please set the school year start and end dates.');
+    return;
+  }
+  buildCalForm(document.getElementById('predictCalCard'), 'predict', DEFAULTS_PREDICT);
+  goStep(3);
+});
+
+/* ═══════════════════════════════════════════════════════
+   STEP 3 → 4: RUN
+═══════════════════════════════════════════════════════ */
+document.getElementById('step3Next').addEventListener('click', () => {
+  const trainCfg   = readCalForm('train');
+  const predictCfg = readCalForm('predict');
+
+  if (!predictCfg.start || !predictCfg.end) {
+    alert('Please set the prediction year start and end dates.');
+    return;
+  }
+
+  goStep(4);
+  document.getElementById('loadingState').style.display  = 'block';
+  document.getElementById('resultsState').style.display  = 'none';
+
+  // Give DOM time to render spinner before heavy work
+  setTimeout(() => {
+    const trainCal   = buildCalendar(trainCfg);
+    const predictCal = buildCalendar(predictCfg);
+
+    state.results = [];
+    const errors  = [];
+
+    for (const f of state.files) {
+      const res = runPipeline(f.csv, trainCal, predictCal);
+      if (res.error) {
+        errors.push(`${f.info.label}: ${res.error}`);
+      } else {
+        state.results.push({ label: f.info.label, ...res });
+      }
+    }
+
+    document.getElementById('loadingState').style.display = 'none';
+
+    if (!state.results.length) {
+      document.getElementById('resultsState').innerHTML =
+        `<div class="alert alert-err">⚠ ${errors.join('<br>')}</div>
+         <div class="btn-row"><button class="btn btn-secondary" onclick="goStep(1)">← Start Over</button></div>`;
+      document.getElementById('resultsState').style.display = 'block';
+      return;
+    }
+
+    document.getElementById('resultsState').style.display = 'block';
+    state.activeTab = 0;
+
+    const pyear = predictCfg.start.slice(0, 4);
+    document.getElementById('resultsMeta').textContent =
+      `${state.results.length} station${state.results.length > 1 ? 's' : ''} · ${predictCal.sorted.length} school days · ${pyear}–${parseInt(pyear)+1} school year`;
+
+    renderTabs();
+    renderResults();
+
+    if (errors.length) {
+      document.getElementById('resultsState').insertAdjacentHTML('afterbegin',
+        `<div class="alert alert-warn">⚠ Some files had issues: ${errors.join(' | ')}</div>`);
+    }
+  }, 60);
+});
+
+/* ═══════════════════════════════════════════════════════
+   RESULTS RENDERING
+═══════════════════════════════════════════════════════ */
+function renderTabs() {
+  const tabs = document.getElementById('stationTabs');
+  tabs.innerHTML = '';
+  if (state.results.length <= 1) { tabs.style.display = 'none'; return; }
+  tabs.style.display = 'flex';
+  state.results.forEach((r, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'tab-btn' + (i === state.activeTab ? ' active' : '');
+    btn.textContent = r.label;
+    btn.addEventListener('click', () => { state.activeTab = i; renderTabs(); renderResults(); });
+    tabs.appendChild(btn);
+  });
+}
+
+function renderResults() {
+  const r = state.results[state.activeTab];
+  if (!r) return;
+
+  const preds = r.predictions;
+  const meals = preds.map(p => p.meals);
+  const schoolMeals = meals.filter(m => m > 0);
+
+  // Stats
+  document.getElementById('statGrid').innerHTML = `
+    <div class="stat-box"><div class="stat-lbl">School Days</div><div class="stat-val">${preds.length}</div><div class="stat-sub">this year</div></div>
+    <div class="stat-box"><div class="stat-lbl">Daily Average</div><div class="stat-val">${Math.round(meanArr(schoolMeals))}</div><div class="stat-sub">meals / school day</div></div>
+    <div class="stat-box"><div class="stat-lbl">Projected Peak</div><div class="stat-val">${Math.max(...schoolMeals)}</div><div class="stat-sub">single day max</div></div>
+    <div class="stat-box"><div class="stat-lbl">Training Days</div><div class="stat-val">${r.trainSize}</div><div class="stat-sub">used to fit model</div></div>`;
+
+  // Chart
+  document.getElementById('chartTitle').textContent = r.label + ' — Monthly Averages';
+  drawMonthChart(preds);
+
+  // Table
+  const tbody = document.getElementById('predTbody');
+  tbody.innerHTML = '';
+  preds.forEach(p => {
+    const tr = document.createElement('tr');
+    if (p.er) tr.className = 'er-row';
+    tr.innerHTML = `
+      <td>${p.idx}</td>
+      <td>${p.date}</td>
+      <td>${p.day}</td>
+      <td><strong>${p.meals}</strong></td>
+      <td>${p.er ? '<span class="pill pill-er">⏰ Early release</span>' : '<span class="pill pill-ok">Regular</span>'} ${p.note.replace('Regular','').replace('Early release','').trim()}</td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+/* ═══════════════════════════════════════════════════════
+   MONTHLY CHART
+═══════════════════════════════════════════════════════ */
+function drawMonthChart(preds) {
+  // Group by month
+  const byMonth = {};
+  for (const p of preds) {
+    const key = `${p.year}-${String(p.month + 1).padStart(2, '0')}`;
+    if (!byMonth[key]) byMonth[key] = { label: MONTHS[p.month].slice(0, 3) + " '" + String(p.year).slice(2), reg: [], er: [] };
+    if (p.er) byMonth[key].er.push(p.meals);
+    else      byMonth[key].reg.push(p.meals);
+  }
+
+  const months = Object.keys(byMonth).sort();
+  const bars = months.map(k => ({
+    label:   byMonth[k].label,
+    avg:     Math.round(meanArr([...byMonth[k].reg, ...byMonth[k].er])),
+    avgReg:  Math.round(meanArr(byMonth[k].reg)),
+    hasER:   byMonth[k].er.length > 0,
+    erAvg:   Math.round(meanArr(byMonth[k].er)),
+  }));
+
+  const cv  = document.getElementById('monthChart');
+  const dpr = window.devicePixelRatio || 1;
+  const W   = cv.offsetWidth || 600;
+  const H   = 160;
+  cv.width  = W * dpr;
+  cv.height = H * dpr;
+  cv.style.height = H + 'px';
+  const ctx = cv.getContext('2d');
+  ctx.scale(dpr, dpr);
+
+  const cs = getComputedStyle(document.documentElement);
+  const cA = cs.getPropertyValue('--bar-reg').trim();
+  const cB = cs.getPropertyValue('--bar-er').trim();
+  const cBd = cs.getPropertyValue('--border').trim();
+  const cT2 = cs.getPropertyValue('--text-2').trim();
+
+  ctx.clearRect(0, 0, W, H);
+  if (!bars.length) return;
+
+  const maxV = Math.max(...bars.map(b => b.avg), 1);
+  const pL = 42, pR = 10, pT = 14, pB = 30;
+  const pw = W - pL - pR, ph = H - pT - pB;
+  const step = pw / bars.length;
+  const bw = Math.max(4, step - 6);
+
+  // Grid
+  for (let i = 0; i <= 4; i++) {
+    const y = pT + ph - (i / 4) * ph;
+    ctx.strokeStyle = cBd; ctx.lineWidth = .5;
+    ctx.beginPath(); ctx.moveTo(pL, y); ctx.lineTo(pL + pw, y); ctx.stroke();
+    ctx.fillStyle = cT2; ctx.font = '9px system-ui,sans-serif'; ctx.textAlign = 'right';
+    ctx.fillText(Math.round(i / 4 * maxV), pL - 5, y + 3);
+  }
+
+  bars.forEach((b, i) => {
+    const x  = pL + i * step + (step - bw) / 2;
+    const bh = (b.avg / maxV) * ph;
+    const y  = pT + ph - bh;
+    ctx.fillStyle = b.hasER ? cB : cA;
+    ctx.globalAlpha = .8;
+    ctx.fillRect(x, y, bw, bh);
+    ctx.globalAlpha = 1;
+
+    // Label
+    ctx.fillStyle = cT2; ctx.font = '8px system-ui,sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText(b.label, x + bw / 2, pT + ph + 16);
+
+    // Value on top
+    if (bh > 18) {
+      ctx.fillStyle = '#fff'; ctx.font = 'bold 9px system-ui,sans-serif';
+      ctx.fillText(b.avg, x + bw / 2, y + 11);
+    }
+  });
+}
+
+/* ═══════════════════════════════════════════════════════
+   DOWNLOAD CSV
+═══════════════════════════════════════════════════════ */
+document.getElementById('downloadBtn').addEventListener('click', () => {
+  const r = state.results[state.activeTab];
+  if (!r) return;
+  const rows = [['#','Date','Day','Predicted Meals','Early Release','Note']];
+  r.predictions.forEach(p => rows.push([p.idx, p.date, p.day, p.meals, p.er ? 'Yes' : 'No', p.note]));
+  const csv = rows.map(r => r.join(',')).join('\n');
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+  a.download = r.label.replace(/\s+/g, '_') + '_predictions.csv';
+  a.click();
+});
+
+/* ═══════════════════════════════════════════════════════
+   INIT
+═══════════════════════════════════════════════════════ */
+window.addEventListener('resize', () => {
+  if (state.step === 4 && state.results.length) drawMonthChart(state.results[state.activeTab].predictions);
+});
+</script>
+</body>
+</html>
