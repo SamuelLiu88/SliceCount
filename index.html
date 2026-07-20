@@ -309,6 +309,10 @@ hr{border:none;border-top:1px solid var(--border);margin:1.25rem 0}
             <span class="instr-example">Grill Breakfast.csv</span>
             <span class="instr-example">NC Lunch.csv</span>
             <span class="instr-example">Totals Breakfast.csv</span>
+            <span style="display:block;margin-top:.5rem;font-size:.8rem;color:var(--text2)">
+              Don't have your own data yet?
+              <strong style="color:var(--accent);cursor:pointer" onclick="goStep(1);setTimeout(loadSampleData,100)">Load Camas SD sample data →</strong>
+            </span>
           </div>
         </li>
 
@@ -363,6 +367,11 @@ hr{border:none;border-top:1px solid var(--border);margin:1.25rem 0}
     </div>
     <div class="file-list" id="fileList"></div>
     <div id="uploadAlert"></div>
+
+    <div style="border-top:1px solid var(--border);margin-top:1rem;padding-top:1rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.75rem">
+      <div style="font-size:.82rem;color:var(--text2)">Don't have your own data? Try the app with Camas SD 2025–2026 sample files.</div>
+      <button class="btn btn-secondary btn-sm" id="sampleBtn" onclick="loadSampleData()">⬇ Load sample data</button>
+    </div>
   </div>
 
   <div class="btn-row">
@@ -1206,6 +1215,42 @@ document.getElementById('downloadBtn').addEventListener('click', () => {
 window.addEventListener('resize', () => {
   if (state.step === 4 && state.results.length) drawMonthChart(state.results[state.activeTab].predictions);
 });
+
+// ── Sample data loader ────────────────────────────────
+const SAMPLE_FILES = [
+  { name: 'Grill Breakfast.csv', url: 'https://raw.githubusercontent.com/SamuelLiu88/SliceCount/main/Grill%20Breakfast.csv' },
+  { name: 'Grill Lunch.csv',     url: 'https://raw.githubusercontent.com/SamuelLiu88/SliceCount/main/Grill%20Lunch.csv'     },
+];
+
+async function loadSampleData() {
+  const btn = document.getElementById('sampleBtn');
+  if (btn) { btn.textContent = '⏳ Loading…'; btn.disabled = true; }
+
+  const alert = document.getElementById('uploadAlert');
+  alert.innerHTML = '';
+
+  try {
+    for (const f of SAMPLE_FILES) {
+      const res = await fetch(f.url);
+      if (!res.ok) throw new Error(`Could not fetch ${f.name}`);
+      const text = await res.text();
+      const csv  = parseCSV(text);
+      if (!csv) throw new Error(`Could not parse ${f.name}`);
+
+      // Avoid duplicates
+      if (!state.files.find(x => x.name === f.name)) {
+        const info = guessStation(f.name);
+        state.files.push({ name: f.name, info, csv });
+      }
+    }
+    renderFileList();
+    alert.innerHTML = `<div class="alert alert-ok">✓ Sample files loaded — Grill Breakfast &amp; Grill Lunch (Camas SD 2025–2026). You can add more files or proceed.</div>`;
+  } catch (err) {
+    alert.innerHTML = `<div class="alert alert-err">⚠ ${err.message}. Check your internet connection or download the files manually from the SliceCount GitHub repo.</div>`;
+  } finally {
+    if (btn) { btn.textContent = '⬇ Load sample data'; btn.disabled = false; }
+  }
+}
 
 // Start on landing page
 document.getElementById('headerRight').style.display = 'none';
