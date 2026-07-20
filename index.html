@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>School Food Consumption Predictor</title>
+<title>SliceCount - School Food Consumption Predictor</title>
 <style>
 /* ── Tokens ──────────────────────────────────────────── */
 :root {
@@ -158,6 +158,23 @@ tr.er-row td{background:var(--ear-bg)}
 hr{border:none;border-top:1px solid var(--border);margin:1.25rem 0}
 .help-text{font-size:.78rem;color:var(--text2);margin-top:.35rem}
 
+/* ── Landing page ────────────────────────────────────── */
+.landing{text-align:center;padding:2.5rem 1.25rem 5rem;max-width:700px;margin:0 auto}
+.landing-img{width:220px;height:220px;object-fit:cover;border-radius:28px;box-shadow:0 8px 40px rgba(0,0,0,.15);margin-bottom:1.75rem}
+.landing-name{font-size:2.4rem;font-weight:800;letter-spacing:-.03em;color:var(--text);margin-bottom:.3rem}
+.landing-tag{font-size:1rem;color:var(--text2);margin-bottom:2.25rem}
+.landing-start{background:var(--accent);color:#fff;border:none;border-radius:10px;font-size:1rem;font-family:inherit;font-weight:700;padding:.85rem 2.5rem;cursor:pointer;box-shadow:0 4px 18px rgba(29,82,204,.35);transition:transform .12s,box-shadow .12s;margin-bottom:2.75rem}
+.landing-start:hover{transform:translateY(-2px);box-shadow:0 6px 24px rgba(29,82,204,.45)}
+.landing-start:active{transform:translateY(0)}
+.instr-card{background:var(--surf);border:1px solid var(--border);border-radius:var(--radius);padding:1.5rem 1.75rem;text-align:left;box-shadow:var(--shadow)}
+.instr-title{font-size:.68rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text2);margin-bottom:1rem}
+.instr-list{list-style:none;display:flex;flex-direction:column;gap:.8rem}
+.instr-item{display:flex;align-items:flex-start;gap:.75rem;font-size:.88rem}
+.instr-icon{font-size:1.1rem;flex-shrink:0;margin-top:.05rem}
+.instr-item strong{display:block;color:var(--text);font-size:.88rem;margin-bottom:.1rem}
+.instr-item span{color:var(--text2);font-size:.82rem;line-height:1.5}
+.instr-example{display:inline-block;font-family:'Courier New',monospace;font-size:.75rem;background:var(--acc-bg);color:var(--accent);padding:.1rem .4rem;border-radius:3px;margin-top:.2rem}
+
 /* ── Pizza background ────────────────────────────────── */
 .pizza-bg{position:fixed;inset:0;z-index:-1;pointer-events:none;font-size:2rem;line-height:2.8rem;overflow:hidden;opacity:.07;word-break:break-all;user-select:none;padding:.5rem}
 
@@ -200,8 +217,9 @@ hr{border:none;border-top:1px solid var(--border);margin:1.25rem 0}
     </div>
     <div class="app-subtitle">Upload last year's data · configure calendars · get predictions</div>
   </div>
-  <button class="about-btn" onclick="document.getElementById('aboutModal').classList.add('open')">About</button>
-  <nav class="steps" id="stepNav">
+  <div id="headerRight" style="display:flex;align-items:center;gap:.75rem">
+    <button class="about-btn" onclick="document.getElementById('aboutModal').classList.add('open')">About</button>
+    <nav class="steps" id="stepNav">
     <div class="step-item active" data-step="1">
       <div class="step-num">1</div><span class="step-label">Data</span>
     </div>
@@ -218,6 +236,7 @@ hr{border:none;border-top:1px solid var(--border);margin:1.25rem 0}
       <div class="step-num">4</div><span class="step-label">Predictions</span>
     </div>
   </nav>
+  </div>
 </header>
 
 <!-- Pizza background -->
@@ -263,6 +282,72 @@ hr{border:none;border-top:1px solid var(--border);margin:1.25rem 0}
 </div>
 
 <main class="app-main">
+
+<!-- ══ LANDING PAGE ══════════════════════════════════════ -->
+<div class="panel active" id="panel0">
+  <div class="landing">
+    <img
+      src="https://raw.githubusercontent.com/SamuelLiu88/SliceCount/main/PHOTO-2026-07-19-15-45-57.jpg"
+      alt="SliceCount logo"
+      class="landing-img"
+      onerror="this.style.display='none'"
+    >
+    <div class="landing-name">🍕 SliceCount</div>
+    <div class="landing-tag">AI-powered school meal consumption forecasting</div>
+
+    <button class="landing-start" onclick="goStep(1)">Get Started →</button>
+
+    <div class="instr-card">
+      <div class="instr-title">What you'll need to run a prediction</div>
+      <ul class="instr-list">
+
+        <li class="instr-item">
+          <span class="instr-icon">📂</span>
+          <div>
+            <strong>Meal history CSV files (last school year)</strong>
+            <span>One or more CSV files exported from your nutrition service system. Each file covers one station and meal type.</span>
+            <span class="instr-example">Grill Breakfast.csv</span>
+            <span class="instr-example">NC Lunch.csv</span>
+            <span class="instr-example">Totals Breakfast.csv</span>
+          </div>
+        </li>
+
+        <li class="instr-item">
+          <span class="instr-icon">📋</span>
+          <div>
+            <strong>Required columns inside each CSV</strong>
+            <span>A <strong>Date</strong> column (M/D/YYYY format) and a meals count column (any name containing "Meal" or "Total"). Zero values on non-school days are fine — the app ignores them automatically.</span>
+          </div>
+        </li>
+
+        <li class="instr-item">
+          <span class="instr-icon">📅</span>
+          <div>
+            <strong>Last year's school calendar</strong>
+            <span>You'll enter the school year start &amp; end date, all holidays and breaks, and early-release days. Camas SD 2025–2026 dates are pre-filled as a starting point.</span>
+          </div>
+        </li>
+
+        <li class="instr-item">
+          <span class="instr-icon">🗓️</span>
+          <div>
+            <strong>This year's school calendar</strong>
+            <span>Same information for the year you want predictions for. Camas SD 2026–2027 dates are pre-filled and editable.</span>
+          </div>
+        </li>
+
+        <li class="instr-item">
+          <span class="instr-icon">⬇️</span>
+          <div>
+            <strong>Output</strong>
+            <span>A predicted meal count for every school day this year, shown as a chart and a table you can download as a CSV file.</span>
+          </div>
+        </li>
+
+      </ul>
+    </div>
+  </div>
+</div>
 
 <!-- ══ STEP 1: Upload ════════════════════════════════════ -->
 <div class="panel active" id="panel1">
@@ -828,6 +913,9 @@ function goStep(n) {
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
   document.getElementById('panel' + n).classList.add('active');
 
+  // Hide step nav and about button on landing page
+  document.getElementById('headerRight').style.display = n === 0 ? 'none' : 'flex';
+
   document.querySelectorAll('.step-item').forEach(el => {
     const s = parseInt(el.dataset.step);
     el.classList.remove('active', 'done');
@@ -1118,6 +1206,9 @@ document.getElementById('downloadBtn').addEventListener('click', () => {
 window.addEventListener('resize', () => {
   if (state.step === 4 && state.results.length) drawMonthChart(state.results[state.activeTab].predictions);
 });
+
+// Start on landing page
+document.getElementById('headerRight').style.display = 'none';
 
 // Close about modal on Escape
 document.addEventListener('keydown', e => {
